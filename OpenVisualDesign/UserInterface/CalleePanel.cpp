@@ -2,7 +2,7 @@
 
 namespace OVD
 {
-    bool CalleePanel::render_callee_panel(const Definition::Callee& callee, ImVec2 size, int index)
+    bool CalleePanel::render_callee_panel(const Definition::Callee& callee, ImVec2 size, int index, bool has_popup)
     {
         ImGui::BeginChild((callee.callable->name + std::to_string(index)).c_str(), size, true);
         render_dragdrop(callee.callable, size, index);
@@ -10,14 +10,15 @@ namespace OVD
         ImGui::EndChild();
         ImGui::SameLine();
 
-        if (ImGui::IsItemHovered())
+        bool hovered = ImGui::IsItemHovered();
+        if (hovered || has_popup)
         {
             ImGui::PushStyleColor(ImGuiCol_ChildBg, { .3f,.3f, .1f, 1.f });
             ImGui::BeginChild("insert", { size.x * .1f, size.y });
             ImGui::EndChild();
             ImGui::SameLine();
             ImGui::PopStyleColor();
-            return true;
+            return hovered;
         }
         return false;
     }
@@ -26,6 +27,7 @@ namespace OVD
     {
         if (ImGui::BeginDragDropSource())
         {
+            ImGui::SetDragDropPayload("callee_panel", &index, sizeof(index));
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.16f, 0.16f, 0.16f, 1.00f));
             ImGui::BeginChild((callable->name + std::to_string(index) + "dragdrop").c_str(), size, true);
             render_panel_core(callable, size, index);
@@ -43,6 +45,15 @@ namespace OVD
         ImGui::Spacing(); ImGui::SameLine();
     }
 
+    void CalleePanel::render_dragdrop(const std::string& value)
+    {
+        if (ImGui::BeginDragDropSource())
+        {
+            ImGui::Selectable(value.c_str());
+            ImGui::EndDragDropSource();
+        }
+    }
+
     void CalleePanel::render_panel_core(const Callable *callable, ImVec2 size, int index)
     {
         ImGui::Selectable(callable->name.c_str());
@@ -55,6 +66,7 @@ namespace OVD
         {
             render_grab_handle();
             ImGui::Selectable(parameter.name.c_str());
+            render_dragdrop(parameter.name);
         }
         ImGui::EndChild();
         ImGui::PopStyleColor();
@@ -65,6 +77,7 @@ namespace OVD
         render_dragdrop(callable, size, index);
         render_grab_handle();
         ImGui::Selectable(callable->return_type.c_str());
+        render_dragdrop(callable->return_type);
         ImGui::EndChild();
         ImGui::PopStyleColor();
     }

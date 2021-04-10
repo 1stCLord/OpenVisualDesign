@@ -9,7 +9,7 @@ namespace OVD
         ImGui::OpenPopupOnItemClick("callables_popup");
         if (ImGui::BeginPopup("callables_popup"))
         {
-
+            open = true;
             ImVec2 size = { 200, 400 };
             char searchtext[50];
             memset(searchtext, 0, 50);
@@ -25,6 +25,7 @@ namespace OVD
                     {
                         selected = &callable;
                         notify_selected_callable(selected);
+                        ImGui::CloseCurrentPopup();
                     }
                 }
             }
@@ -32,5 +33,6 @@ namespace OVD
 
             ImGui::EndPopup();
         }
+        else open = false;
 	}
 }

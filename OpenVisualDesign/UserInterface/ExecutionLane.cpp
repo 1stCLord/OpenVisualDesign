@@ -12,11 +12,9 @@ namespace OVD
 
         callables_window.notify_selected_callable = [&](Callable const* selected)
         {
-            ImGui::GetMousePosOnOpeningCurrentPopup();
             Definition::Callee callee{ selected };
             std::vector<Definition::Callee> &callees = definition->get_callees();
             definition->get_callees().insert(callees.begin() + insert_index, callee);
-            ImGui::CloseCurrentPopup();
         };
     }
 
@@ -38,12 +36,34 @@ namespace OVD
 
         ImGui::BeginChild("lane");
         render_register_lanes(should_render_register_lanes, 20);
-        int i = 0;
-        for (Definition::Callee& callee : definition->get_callees())
+        int i = 0, drop_source = -1;
+
+        std::vector<Definition::Callee> &callees = definition->get_callees();
+
+        size = { current_size_y_scale * conf().execution_lane_size, conf().execution_lane_size * 0.8f };
+        int accept_drop = accept_callee_drop(size, -1);
+        if (accept_drop >= 0)
         {
-            if (CalleePanel::render_callee_panel(callee, { current_size_y_scale * conf().execution_lane_size, conf().execution_lane_size * 0.8f }, i++))
-                insert_index = i;
+            insert_index = -1;
+            drop_source = accept_drop;
         }
+
+        for (Definition::Callee& callee : callees)
+        {
+            bool has_popup = callables_window.is_open() && insert_index == i;
+            if (CalleePanel::render_callee_panel(callee, size, i, has_popup))
+                insert_index = i;
+            int accept_drop = accept_callee_drop(size, i);
+            if (accept_drop >= 0)
+            {
+                insert_index = i;
+                drop_source = accept_drop;
+            }
+            i++;
+        }
+
+        drop_callee(drop_source, insert_index+1);
+
         ImGui::EndChild();
         ImGui::EndChild();
         current_size_y_scale = std::max(0.1f, current_size_y_scale + ImGui::GetIO().MouseWheel/10);
@@ -81,5 +101,42 @@ namespace OVD
             }
             ImGui::EndChild();
         }
+    }
+
+    void ExecutionLane::drop_callee(int source, int destination)
+    {
+        std::vector<Definition::Callee>& callees = definition->get_callees();
+
+        if (source >= 0)
+        {
+            Definition::Callee callee = callees[source];
+            if (destination > source)
+                callees.insert(callees.begin() + destination, callee);
+            callees.erase(callees.begin() + source);
+            if (destination <= source)
+                callees.insert(callees.begin() + destination, callee);
+        }
+    }
+
+    int ExecutionLane::accept_callee_drop(ImVec2 size, int index)
+    {
+        if (ImGui::GetDragDropPayload())
+        {
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, { .3f,.3f, .1f, 1.f });
+            ImGui::BeginChild((std::string("insert") + std::to_string(index)).c_str(), { size.x * .1f, size.y });
+            ImGui::EndChild();
+            ImGui::SameLine();
+            ImGui::PopStyleColor();
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("callee_panel"))
+                {
+                    int source_index = *(int*)payload->Data;
+                    return source_index;
+                }
+                ImGui::EndDragDropTarget();
+            }
+        }
+        return -1;
     }
 }
