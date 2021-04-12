@@ -114,6 +114,7 @@ namespace OVD
                 register_lane.render();
             }
             ImGui::EndChild();
+            RegisterLane::handle_static_drop();
         }
     }
 

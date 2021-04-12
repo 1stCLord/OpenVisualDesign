@@ -21,7 +21,7 @@ namespace OVD
 
 		if (include_last)
 		{
-			int size = source.size();
+			size_t size = source.size();
 			if(size)
 				callable(last_position, size);
 		}
@@ -83,7 +83,7 @@ namespace OVD
 					std::string_view return_type, name;
 					parse_type_and_name(return_type_and_name_view, return_type, name);
 
-					Callable callable{ std::string(name), parse_parameters(parameters), std::string(return_type) };
+					Callable callable{ .name = std::string(name), .parameters = parse_parameters(parameters), .return_type = std::string(return_type) };
 					if ((attributes & Attribute::callable) == Attribute::callable)
 					{
 						callables.push_back(callable);

@@ -9,8 +9,8 @@ namespace OVD
 		Window(UserInterface* user_interface);
 		virtual void render() = 0;
 
-		UserInterface* get_ui();
-		UserInterface::Config& conf();
+		UserInterface* get_ui() const;
+		UserInterface::Config& conf() const;
 	private:
 		UserInterface* user_interface;
 	};
