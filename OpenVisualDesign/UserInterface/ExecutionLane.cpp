@@ -3,7 +3,7 @@
 
 namespace OVD
 {
-    ExecutionLane::ExecutionLane(UserInterface* user_interface) :Window(user_interface), callables_window(user_interface)
+    ExecutionLane::ExecutionLane(UserInterface* user_interface) :Window(user_interface), callables_window(user_interface), register_lanes{RegisterLane(user_interface,0, this)}
     {
         get_ui()->notify_selected_definition = [&](Definition * selected)
         {
@@ -12,9 +12,8 @@ namespace OVD
 
         callables_window.notify_selected_callable = [&](Callable const* selected)
         {
-            Definition::Callee callee{ selected };
-            std::vector<Definition::Callee> &callees = definition->get_callees();
-            definition->get_callees().insert(callees.begin() + insert_index, callee);
+            std::vector<std::unique_ptr<Definition::Callee>> &callees = definition->get_callees();
+            definition->get_callees().insert(callees.begin() + insert_index, std::make_unique<Definition::Callee>(selected));
         };
     }
 
@@ -23,7 +22,7 @@ namespace OVD
         if (definition == nullptr)return;
 
         ImVec2 position = { (float)conf().calc_borders(1) + conf().left_win_size, conf().border };
-        ImVec2 size = { conf().calc_fill(position).x, (float)conf().execution_lane_size + (30*register_lanes) };
+        ImVec2 size = { conf().calc_fill(position).x, (float)conf().execution_lane_size + ((RegisterLane::register_lane_size+10)*register_lanes.size()) };
         ImGui::SetNextWindowPos(position);
         std::string name;
         if (definition != nullptr)
@@ -32,13 +31,13 @@ namespace OVD
         ImGui::BeginChild(name.c_str(), size, true, ImGuiWindowFlags_HorizontalScrollbar);
         bool should_render_register_lanes = ImGui::CollapsingHeader("Register Lanes");
 
-        render_register_lanes_controls(should_render_register_lanes, 20);
+        render_register_lanes_controls(should_render_register_lanes);
 
         ImGui::BeginChild("lane");
-        render_register_lanes(should_render_register_lanes, 20);
+        render_register_lanes(should_render_register_lanes);
         int i = 0, drop_source = -1;
 
-        std::vector<Definition::Callee> &callees = definition->get_callees();
+        std::vector<std::unique_ptr<Definition::Callee>> &callees = definition->get_callees();
 
         size = { current_size_y_scale * conf().execution_lane_size, conf().execution_lane_size * 0.8f };
         int accept_drop = accept_callee_drop(size, -1);
@@ -48,10 +47,10 @@ namespace OVD
             drop_source = accept_drop;
         }
 
-        for (Definition::Callee& callee : callees)
+        for (std::unique_ptr<Definition::Callee> &callee : callees)
         {
             bool has_popup = callables_window.is_open() && insert_index == i;
-            if (CalleePanel::render_callee_panel(callee, size, i, has_popup))
+            if (CalleePanel::render_callee_panel(callee.get(), size, i, has_popup))
                 insert_index = i;
             int accept_drop = accept_callee_drop(size, i);
             if (accept_drop >= 0)
@@ -71,33 +70,48 @@ namespace OVD
         callables_window.render();
 	}
 
-    void ExecutionLane::render_register_lanes_controls(bool render, float height)
+    int ExecutionLane::get_column_of(Definition::Callee const* callee) const
     {
-        ImGui::BeginChild("registerlanescontrols", { 30, height * register_lanes * 1.3f }, false, ImGuiWindowFlags_NoScrollbar);
+        int i = 0;
+        for (std::unique_ptr<Definition::Callee> &current_callee : definition->get_callees())
+        {
+            if (current_callee.get() == callee)
+                return i;
+            ++i;
+        }
+        return -1;
+    }
+
+    void ExecutionLane::render_register_lanes_controls(bool render)
+    {
+        ImGui::BeginChild("registerlanescontrols", { 30, RegisterLane::register_lane_size * register_lanes.size() * 1.3f }, false, ImGuiWindowFlags_NoScrollbar);
         if (render)
         {
-            if (ImGui::Button("+", { height, height }))
-                ++register_lanes;
-            if (register_lanes > 1)
+            if (register_lanes.size() < RegisterLane::register_lane_max)
             {
-                if (ImGui::Button("-", { height, height }))
-                    --register_lanes;
+                if (ImGui::Button("+", { RegisterLane::register_lane_size, RegisterLane::register_lane_size }))
+                    register_lanes.push_back(RegisterLane(get_ui(), register_lanes.size(), this));
             }
-            register_lanes = std::max(1, register_lanes);
+            if (register_lanes.size() > RegisterLane::register_lane_min)
+            {
+                if (ImGui::Button("-", { RegisterLane::register_lane_size, RegisterLane::register_lane_size }))
+                    register_lanes.pop_back();
+            }
         }
         ImGui::EndChild();
         ImGui::SameLine();
     }
 
-    void ExecutionLane::render_register_lanes(bool render, float height)
+    void ExecutionLane::render_register_lanes(bool render)
     {
         if (render)
         {
-            ImGui::BeginChild("registerlanes", { 0, height * register_lanes * 1.3f }, false, ImGuiWindowFlags_HorizontalScrollbar);
-            for (int i = 0; i < register_lanes; ++i)
+            ImGui::BeginChild("registerlanes", { 0, RegisterLane::register_lane_size * register_lanes.size() * 1.3f }, false, ImGuiWindowFlags_HorizontalScrollbar);
+            //for (int i = 0; i < register_lanes; ++i)
+            int i = 0;
+            for(RegisterLane &register_lane : register_lanes)
             {
-                ImGui::BeginChild((std::string("registerlane") + std::to_string(i)).c_str(), { 0, height }, true, ImGuiWindowFlags_HorizontalScrollbar);
-                ImGui::EndChild();
+                register_lane.render();
             }
             ImGui::EndChild();
         }
@@ -105,22 +119,24 @@ namespace OVD
 
     void ExecutionLane::drop_callee(int source, int destination)
     {
-        std::vector<Definition::Callee>& callees = definition->get_callees();
+        std::vector<std::unique_ptr<Definition::Callee>>& callees = definition->get_callees();
 
         if (source >= 0)
         {
-            Definition::Callee callee = callees[source];
+            Definition::Callee *callee = callees[source].get();
+            callees[source].release();
             if (destination > source)
-                callees.insert(callees.begin() + destination, callee);
+                callees.insert(callees.begin() + destination, std::unique_ptr<Definition::Callee>(callee));
             callees.erase(callees.begin() + source);
             if (destination <= source)
-                callees.insert(callees.begin() + destination, callee);
+                callees.insert(callees.begin() + destination, std::unique_ptr<Definition::Callee>(callee));
         }
     }
 
     int ExecutionLane::accept_callee_drop(ImVec2 size, int index)
     {
-        if (ImGui::GetDragDropPayload())
+        ImGuiPayload const * payload = ImGui::GetDragDropPayload();
+        if (payload && std::string(payload->DataType) == "callee_panel")
         {
             ImGui::PushStyleColor(ImGuiCol_ChildBg, { .3f,.3f, .1f, 1.f });
             ImGui::BeginChild((std::string("insert") + std::to_string(index)).c_str(), { size.x * .1f, size.y });
@@ -129,7 +145,7 @@ namespace OVD
             ImGui::PopStyleColor();
             if (ImGui::BeginDragDropTarget())
             {
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("callee_panel"))
+                if (ImGuiPayload const * payload = ImGui::AcceptDragDropPayload("callee_panel"))
                 {
                     int source_index = *(int*)payload->Data;
                     return source_index;

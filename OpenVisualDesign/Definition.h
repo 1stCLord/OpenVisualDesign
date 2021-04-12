@@ -18,9 +18,9 @@ namespace OVD
 		Definition(const Callable& callable) : callable(callable) {}
 
 		const Callable& get_callable() const { return callable; }
-		std::vector<Callee>& get_callees() { return callees; }
+		std::vector<std::unique_ptr<Callee>>& get_callees() { return callees; }
 	private:
 		Callable callable;
-		std::vector<Callee> callees;
+		std::vector<std::unique_ptr<Callee>> callees;
 	};
 }
