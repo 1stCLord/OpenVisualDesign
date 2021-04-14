@@ -3,13 +3,20 @@
 
 namespace OVD
 {
+	struct PanelLocations
+	{
+		ImVec2 panel_location;
+		ImVec2 return_location;
+		ImVec2 param_location;
+	};
+
 	class CalleePanel : public Window
 	{
 	public:
-		static bool render_callee_panel(Definition::Callee const * callee, ImVec2 size, int index, bool has_popup);
-		static void render_panel_core(Definition::Callee const *callable, ImVec2 size, int index);
-		static void render_dragdrop(Definition::Callee const * callable, ImVec2 size, int index);
+		static bool render_callee_panel(const UserInterface::Config &conf, Definition::Callee const * callee, ImVec2 size, int index, bool has_popup, PanelLocations &locations);
+		static void render_panel_core(const UserInterface::Config &conf, Definition::Callee const *callable, ImVec2 size, int index, PanelLocations *locations);
+		static void render_dragdrop(const UserInterface::Config &conf, Definition::Callee const * callable, ImVec2 size, int index);
 		static void render_dragdrop_return(Definition::Callee const * value);
-		static void render_grab_handle();
+		static void render_grab_handle(const UserInterface::Config &conf);
 	};
 }

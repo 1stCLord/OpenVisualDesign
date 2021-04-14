@@ -39,6 +39,7 @@ namespace OVD
 			file.seekg(0, std::ios::beg);
 			file.read((char*)header_string.data(), length);
 
+			//todo parse classes
 			parse(header_string, variables, callables, definitions);
 			printf("");
 		}

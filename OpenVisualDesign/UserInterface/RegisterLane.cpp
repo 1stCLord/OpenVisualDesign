@@ -38,7 +38,16 @@ namespace OVD
 
 				Definition::Callee const * callee = reg_cit->second;
 				bool selected;
-				ImGui::Selectable(callee->callable->return_type.c_str(), &selected, 0, { current_length * parent->get_current_size_y_scale() * conf().execution_lane_size,0 });
+
+				if (parent->panel_locations.size() > reg_cit->first)
+				{
+					ImVec2 start = ImGui::GetCursorScreenPos(), end = parent->panel_locations[reg_cit->first].return_location;
+					start.y += conf().half_line_height; end.y += conf().half_line_height;
+					ImVec2 mid1 = { start.x - conf().half_line_height, start.y + conf().half_line_height }, mid2 = { start.x - conf().half_line_height, end.y - conf().half_line_height };
+					ImGui::GetForegroundDrawList()->AddBezierCurve(start, mid1, mid2, end, ImColor{ .9f,.9f,.7f,1.f }, 2);
+				}
+
+				ImGui::Selectable((" " + callee->callable->return_type).c_str(), &selected, 0, { current_length * parent->get_current_size_y_scale() * conf().execution_lane_size,0 });
 				render_drag(callee->callable->return_type, callee);
 				ImGui::SameLine();
 			}

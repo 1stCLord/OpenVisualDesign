@@ -11,8 +11,6 @@
 
 namespace OVD
 {
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
     UserInterface::UserInterface()
     {
         SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER);
@@ -88,8 +86,8 @@ namespace OVD
             ImGui::SetNextWindowPos({ 0, 0 });
             ImGui::SetNextWindowSize({ config.window_size.x, config.window_size.y });
             ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove;
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 4));
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.16f, 0.16f, 0.16f, 1.00f));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, config.window_padding);
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, config.panel_colour.Value);
 
             bool open;
             ImGui::Begin("OVD", &open, flags);
@@ -108,7 +106,7 @@ namespace OVD
 
         ImGui::Render();
         glViewport(0, 0, (int)config.window_size.x, (int)config.window_size.y);
-        glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+        glClearColor(config.window_colour.Value.x, config.window_colour.Value.y, config.window_colour.Value.z, config.window_colour.Value.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);

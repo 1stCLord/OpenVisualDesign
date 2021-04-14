@@ -1,5 +1,4 @@
 #include "ExecutionLane.h"
-#include "CalleePanel.h"
 
 namespace OVD
 {
@@ -40,7 +39,7 @@ namespace OVD
         std::vector<std::unique_ptr<Definition::Callee>> &callees = definition->get_callees();
 
         size = { current_size_y_scale * conf().execution_lane_size, conf().execution_lane_size * 0.8f };
-        int accept_drop = accept_callee_drop(size, -1);
+        int accept_drop = accept_callee_drop(conf(), size, -1);
         if (accept_drop >= 0)
         {
             insert_index = -1;
@@ -49,10 +48,12 @@ namespace OVD
 
         for (std::unique_ptr<Definition::Callee> &callee : callees)
         {
+            if (panel_locations.size() < (i + 1))panel_locations.push_back(PanelLocations());
+
             bool has_popup = callables_window.is_open() && insert_index == i;
-            if (CalleePanel::render_callee_panel(callee.get(), size, i, has_popup))
+            if (CalleePanel::render_callee_panel(conf(), callee.get(), size, i, has_popup, panel_locations[i]))
                 insert_index = i;
-            int accept_drop = accept_callee_drop(size, i);
+            int accept_drop = accept_callee_drop(conf(), size, i);
             if (accept_drop >= 0)
             {
                 insert_index = i;
@@ -134,12 +135,12 @@ namespace OVD
         }
     }
 
-    int ExecutionLane::accept_callee_drop(ImVec2 size, int index)
+    int ExecutionLane::accept_callee_drop(const UserInterface::Config &conf, ImVec2 size, int index)
     {
         ImGuiPayload const * payload = ImGui::GetDragDropPayload();
         if (payload && std::string(payload->DataType) == "callee_panel")
         {
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, { .3f,.3f, .1f, 1.f });
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, conf.insert_colour.Value);
             ImGui::BeginChild((std::string("insert") + std::to_string(index)).c_str(), { size.x * .1f, size.y });
             ImGui::EndChild();
             ImGui::SameLine();
