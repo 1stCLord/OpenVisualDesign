@@ -4,13 +4,17 @@ namespace OVD
 {
     bool CalleePanel::render_callee_panel(const UserInterface::Config &conf, Definition::Callee const * callee, ImVec2 size, int index, bool has_popup, PanelLocations &locations)
     {
+        locations.before_panel_location = ImGui::GetCursorScreenPos();
         ImGui::BeginChild((callee->callable->name + std::to_string(index)).c_str(), size, true);
         locations.panel_location = ImGui::GetCursorScreenPos();
         render_dragdrop(conf, callee, size, index);
         render_panel_core(conf, callee, size, index, &locations);
         ImGui::EndChild();
+        locations.end_panel_location.y = ImGui::GetCursorScreenPos().y;
         ImGui::SameLine();
+        locations.end_panel_location.x = ImGui::GetCursorScreenPos().x;
 
+        /*
         bool hovered = ImGui::IsItemHovered();
         if (hovered || has_popup)
         {
@@ -20,7 +24,7 @@ namespace OVD
             ImGui::SameLine();
             ImGui::PopStyleColor();
             return hovered;
-        }
+        }*/
         return false;
     }
 

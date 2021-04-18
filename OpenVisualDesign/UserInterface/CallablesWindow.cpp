@@ -15,7 +15,6 @@ namespace OVD
             memset(searchtext, 0, 50);
             ImGui::BeginChild("callables", size, true);
             ImGui::InputText("Search", searchtext, 50);
-            ImGui::Text("todo");
             for (std::unique_ptr<Header>& header : get_ui()->ovd.headers)
             {
                 std::string filename = header->get_filename().filename().string();

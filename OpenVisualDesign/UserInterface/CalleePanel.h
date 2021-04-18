@@ -5,9 +5,11 @@ namespace OVD
 {
 	struct PanelLocations
 	{
+		ImVec2 before_panel_location;
 		ImVec2 panel_location;
 		ImVec2 return_location;
 		ImVec2 param_location;
+		ImVec2 end_panel_location;
 	};
 
 	class CalleePanel : public Window

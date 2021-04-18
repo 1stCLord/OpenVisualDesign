@@ -26,8 +26,9 @@ namespace OVD
 		void render_register_lanes_controls(bool render);
 		void render_register_lanes(bool render);
 
-		void drop_callee(int source, int destination);
+		void render_drop_insert() const;
+		void drop_callee(int destination);
 
-		static int accept_callee_drop(const UserInterface::Config &conf, ImVec2 size, int index);
+		//static int accept_callee_drop(const UserInterface::Config &conf, ImVec2 size, int index);
 	};
 }
