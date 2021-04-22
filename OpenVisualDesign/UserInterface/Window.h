@@ -13,6 +13,10 @@ namespace OVD
 
 		UserInterface* get_ui() const;
 		UserInterface::Config& conf() const;
+
+		bool is_payload_accepted() { return get_ui()->payload_accepted; }
+		void accept_payload() { get_ui()->payload_accepted = true; }
+
 	private:
 		UserInterface* user_interface;
 	};

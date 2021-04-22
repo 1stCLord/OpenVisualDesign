@@ -47,6 +47,7 @@ namespace OVD
     {
         ImGuiIO& io = ImGui::GetIO();
         config.window_size = io.DisplaySize;
+        payload_accepted = false;
     }
 
     void UserInterface::run()

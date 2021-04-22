@@ -52,7 +52,7 @@ namespace OVD
             if (panel_locations.size() < (i + 1))panel_locations.push_back(PanelLocations());
 
             
-            CalleePanel::render_callee_panel(conf(), callee.get(), panel_size, i, has_popup, panel_locations[i]);
+            CalleePanel::render_callee_panel(get_ui(), callee.get(), panel_size, i, has_popup, panel_locations[i]);
             if (ImGui::GetMousePos().x > panel_locations[i].panel_location.x && cursor_in_window && !has_popup)
                 insert_index = i + 1;
             i++;
@@ -60,11 +60,14 @@ namespace OVD
 
         if(has_popup || cursor_in_window)
             render_drop_insert();
+        RegisterLane::handle_static_drop(*get_ui());
         drop_callee(cursor_in_window ? insert_index : -1);
 
         ImGui::EndChild();
         ImGui::EndChild();
-        current_size_y_scale = std::max(0.1f, current_size_y_scale + ImGui::GetIO().MouseWheel/10);
+        
+        if (ImGui::GetIO().KeyShift)ImGui::SetScrollX(ImGui::GetIO().MouseWheel / 10);
+        else current_size_y_scale = std::max(0.1f, current_size_y_scale + ImGui::GetIO().MouseWheel/10);
 
         callables_window.render();
 	}
@@ -112,7 +115,6 @@ namespace OVD
                 register_lane.render();
             }
             ImGui::EndChild();
-            RegisterLane::handle_static_drop();
         }
     }
 
@@ -155,6 +157,7 @@ namespace OVD
             {
                 if (ImGui::AcceptDragDropPayload(payload_class.c_str()))
                 {
+                    accept_payload();
                     int source_index = *(int*)payload->Data;
                     Definition::Callee* callee = callees[source_index].get();
                     callees[source_index].release();

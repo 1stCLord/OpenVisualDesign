@@ -92,6 +92,7 @@ namespace OVD
 			RegisterLane * source_lane = *(((RegisterLane**)payload->Data) + 1);
 			if (ImGui::AcceptDragDropPayload("callee_return"))
 			{
+				accept_payload();
 				callee_results.insert(payload_callee);
 			}
 
@@ -100,6 +101,7 @@ namespace OVD
 			{
 				if (ImGui::AcceptDragDropPayload(payload_class.c_str()))
 				{
+					accept_payload();
 					callee_results.insert(payload_callee);
 					source_lane->callee_results.erase(payload_callee);
 				}
@@ -108,9 +110,10 @@ namespace OVD
 		}
 	}
 
-	void  RegisterLane::handle_static_drop()
+	void  RegisterLane::handle_static_drop(UserInterface &ui)
 	{
-		if (ImGuiPayload const* payload = ImGui::GetDragDropPayload())
+		ImGuiPayload const* payload = ImGui::GetDragDropPayload();
+		if (payload && !ui.payload_accepted)
 		{
 			Definition::Callee const* payload_callee = *(Definition::Callee const**)payload->Data;
 			RegisterLane* source_lane = *(((RegisterLane**)payload->Data) + 1);
@@ -120,6 +123,7 @@ namespace OVD
 			{
 				if (ImGui::AcceptDragDropPayload(payload_class.c_str()))
 				{
+					ui.payload_accepted = true;
 					source_lane->callee_results.erase(payload_callee);
 				}
 			}

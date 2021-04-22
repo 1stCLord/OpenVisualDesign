@@ -12,7 +12,7 @@ namespace OVD
 	public:
 		RegisterLane(UserInterface* user_interface, int index, ExecutionLane const * parent);
 		void render() override;
-		static void handle_static_drop();
+		static void handle_static_drop(UserInterface &ui);
 
 		static float register_lane_size;
 		static const int register_lane_max = 8;

@@ -1,14 +1,17 @@
 #include "CalleePanel.h"
+#include "RegisterLane.h"
 
 namespace OVD
 {
-    bool CalleePanel::render_callee_panel(const UserInterface::Config &conf, Definition::Callee const * callee, ImVec2 size, int index, bool has_popup, PanelLocations &locations)
+    bool CalleePanel::render_callee_panel(UserInterface *ui, Definition::Callee const * callee, ImVec2 size, int index, bool has_popup, PanelLocations &locations)
     {
+        const UserInterface::Config& conf = ui->config;
+
         locations.before_panel_location = ImGui::GetCursorScreenPos();
         ImGui::BeginChild((callee->callable->name + std::to_string(index)).c_str(), size, true);
         locations.panel_location = ImGui::GetCursorScreenPos();
         render_dragdrop(conf, callee, size, index);
-        render_panel_core(conf, callee, size, index, &locations);
+        render_panel_core(conf, callee, size, index, &locations, ui);
         ImGui::EndChild();
         locations.end_panel_location.y = ImGui::GetCursorScreenPos().y;
         ImGui::SameLine();
@@ -61,7 +64,7 @@ namespace OVD
         }
     }
 
-    void CalleePanel::render_panel_core(const UserInterface::Config &conf, Definition::Callee const *callee, ImVec2 size, int index, PanelLocations *locations)
+    void CalleePanel::render_panel_core(const UserInterface::Config &conf, Definition::Callee const *callee, ImVec2 size, int index, PanelLocations *locations, UserInterface *ui)
     {
         Callable const* callable = callee->callable;
         ImGui::Selectable(callable->name.c_str());
@@ -87,6 +90,8 @@ namespace OVD
         {
             render_grab_handle(conf);
             ImGui::Selectable(parameter.name.c_str());
+            if(ui!=nullptr)
+                drop_param(ui);
         }
         ImGui::EndChild();
         ImGui::PopStyleColor();
@@ -104,5 +109,29 @@ namespace OVD
             ImGui::EndChild();
             ImGui::PopStyleColor();
         }
+    }
+
+    void CalleePanel::drop_param(UserInterface *ui)
+    {
+        if (ImGui::BeginDragDropTarget())
+        {
+            const ImGuiPayload *payload = ImGui::GetDragDropPayload();
+            if (payload)
+            {
+                Definition::Callee const* payload_callee = *(Definition::Callee const**)payload->Data;
+                RegisterLane* source_lane = *(((RegisterLane**)payload->Data) + 1);
+
+                std::string payload_class = std::string(payload->DataType);
+                if (payload_class.starts_with("register"))
+                {
+                    if (ImGui::AcceptDragDropPayload(payload_class.c_str()))
+                    {
+                        ui->payload_accepted = true;
+                    }
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+
     }
 }

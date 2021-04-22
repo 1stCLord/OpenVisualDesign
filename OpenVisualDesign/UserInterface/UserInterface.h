@@ -45,6 +45,8 @@ namespace OVD
 
 		std::function<void(Definition *)> notify_selected_definition;
 
+		bool payload_accepted = false;
+
 	private:
 		void update();
 		bool poll();
