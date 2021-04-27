@@ -49,11 +49,12 @@ namespace OVD
         if(!has_popup)insert_index = 0;
         for (std::unique_ptr<Definition::Callee> &callee : callees)
         {
-            if (panel_locations.size() < (i + 1))panel_locations.push_back(PanelLocations());
+            if (panels.size() < (i + 1))panels.push_back(CalleePanel(get_ui(), this, callee.get(), panel_size, i, has_popup));
+            else panels[i] = CalleePanel(get_ui(), this, callee.get(), panel_size, i, has_popup);
 
-            
-            CalleePanel::render_callee_panel(get_ui(), callee.get(), panel_size, i, has_popup, panel_locations[i]);
-            if (ImGui::GetMousePos().x > panel_locations[i].panel_location.x && cursor_in_window && !has_popup)
+            //CalleePanel panel(get_ui(), callee.get(), panel_size, i, has_popup);
+            panels[i].render();
+            if (ImGui::GetMousePos().x > panels[i].locations.panel_location.x && cursor_in_window && !has_popup)
                 insert_index = i + 1;
             i++;
         }
@@ -86,6 +87,8 @@ namespace OVD
 
     RegisterLane const * ExecutionLane::get_register_lane(Definition::Callee const* callee) const
     {
+        if (callee == nullptr)return nullptr;
+
         for (const RegisterLane& lane : register_lanes)
         {
             if (lane.contains_callee(callee))return &lane;
@@ -129,24 +132,24 @@ namespace OVD
 
     void ExecutionLane::render_drop_insert() const
     {
-        if (!panel_locations.empty())
+        if (!panels.empty())
         {
             if (insert_index == 0)
             {
-                ImVec2 drop_bar_location = { panel_locations[insert_index].before_panel_location.x - conf().window_padding.x, panel_locations[insert_index].before_panel_location.y + conf().border };
-                ImVec2 drop_bar_end = { panel_locations[insert_index].before_panel_location.x, panel_locations[insert_index].end_panel_location.y - conf().border };
+                ImVec2 drop_bar_location = { panels[insert_index].locations.before_panel_location.x - conf().window_padding.x, panels[insert_index].locations.before_panel_location.y + conf().border };
+                ImVec2 drop_bar_end = { panels[insert_index].locations.before_panel_location.x, panels[insert_index].locations.end_panel_location.y - conf().border };
                 ImGui::GetForegroundDrawList()->AddRectFilled(drop_bar_location, drop_bar_end, ImColor(0.9f, 0.1f, 0.1f, 0.2f), 0.5f);
             }
-            else if (insert_index == panel_locations.size())
+            else if (insert_index == panels.size())
             {
-                ImVec2 drop_bar_location = { panel_locations[insert_index - 1].end_panel_location.x - conf().window_padding.x, panel_locations[insert_index - 1].before_panel_location.y + conf().border };
-                ImVec2 drop_bar_end = { panel_locations[insert_index-1].end_panel_location.x, panel_locations[insert_index-1].end_panel_location.y - conf().border };
+                ImVec2 drop_bar_location = { panels[insert_index - 1].locations.end_panel_location.x - conf().window_padding.x, panels[insert_index - 1].locations.before_panel_location.y + conf().border };
+                ImVec2 drop_bar_end = { panels[insert_index-1].locations.end_panel_location.x, panels[insert_index-1].locations.end_panel_location.y - conf().border };
                 ImGui::GetForegroundDrawList()->AddRectFilled(drop_bar_location, drop_bar_end, ImColor(0.9f, 0.1f, 0.1f, 0.2f), 0.5f);
             }
-            else if (panel_locations.size() > insert_index)
+            else if (panels.size() > insert_index)
             {
-                ImVec2 drop_bar_location = { panel_locations[insert_index-1].end_panel_location.x - conf().window_padding.x, panel_locations[insert_index-1].before_panel_location.y + conf().border };
-                ImVec2 drop_bar_end = { panel_locations[insert_index].before_panel_location.x, panel_locations[insert_index].end_panel_location.y - conf().border };
+                ImVec2 drop_bar_location = { panels[insert_index-1].locations.end_panel_location.x - conf().window_padding.x, panels[insert_index-1].locations.before_panel_location.y + conf().border };
+                ImVec2 drop_bar_end = { panels[insert_index].locations.before_panel_location.x, panels[insert_index].locations.end_panel_location.y - conf().border };
                 ImGui::GetForegroundDrawList()->AddRectFilled(drop_bar_location, drop_bar_end, ImColor(0.9f, 0.1f, 0.1f, 0.2f), 0.5f);
             }
         }

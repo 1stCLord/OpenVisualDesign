@@ -18,7 +18,7 @@ namespace OVD
 		RegisterLane const * get_register_lane(Definition::Callee const* callee) const;
 
 		Definition * definition = nullptr;
-		std::vector<PanelLocations> panel_locations;
+		std::vector<CalleePanel> panels;
 	private:
 		CallablesWindow callables_window;
 		float current_size_y_scale = 0.8f;
