@@ -13,6 +13,7 @@ namespace OVD
 	void RegisterLane::render()
 	{
 		ImGui::BeginChild((std::string("registerlane") + std::to_string(index)).c_str(), { 0, RegisterLane::register_lane_size }, true, ImGuiWindowFlags_NoScrollbar);
+		lane_location = ImGui::GetCursorScreenPos();
 
 		if (callee_results.size())
 		{
@@ -26,6 +27,7 @@ namespace OVD
 				ImGui::SameLine();
 			}
 
+			int index = 0;
 			for (ordered_callees::const_iterator reg_cit = curent_ordered_callees.cbegin(); reg_cit != curent_ordered_callees.cend(); ++reg_cit)
 			{
 				ordered_callees::const_iterator next_reg_cit = reg_cit;
@@ -46,9 +48,10 @@ namespace OVD
 					ImVec2 mid1 = { start.x - conf().half_line_height, start.y + conf().half_line_height }, mid2 = { start.x - conf().half_line_height, end.y - conf().half_line_height };
 					ImGui::GetForegroundDrawList()->AddBezierCurve(start, mid1, mid2, end, ImColor{ .9f,.9f,.7f,1.f }, 2);
 				}
-
-				ImGui::Selectable((" " + callee->callable->return_type).c_str(), &selected, 0, { current_length * parent->get_current_size_y_scale() * conf().execution_lane_size,0 });
+				ImGui::BeginChild((std::string("container") + std::to_string(index++)).c_str(), { current_length * parent->get_current_size_y_scale() * conf().execution_lane_size,0 }, false);
+				ImGui::Selectable((" " + callee->callable->return_type).c_str(), &selected );
 				render_drag(callee->callable->return_type, callee);
+				ImGui::EndChild();
 				ImGui::SameLine();
 			}
 		}
@@ -128,5 +131,10 @@ namespace OVD
 				}
 			}
 		}
+	}
+
+	bool OVD::RegisterLane::contains_callee(Definition::Callee const* callee) const
+	{
+		return callee_results.contains(callee);
 	}
 }

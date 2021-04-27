@@ -3,7 +3,7 @@
 
 namespace OVD
 {
-    bool CalleePanel::render_callee_panel(UserInterface *ui, Definition::Callee const * callee, ImVec2 size, int index, bool has_popup, PanelLocations &locations)
+    bool CalleePanel::render_callee_panel(UserInterface *ui, Definition::Callee * callee, ImVec2 size, int index, bool has_popup, PanelLocations &locations)
     {
         const UserInterface::Config& conf = ui->config;
 
@@ -16,6 +16,8 @@ namespace OVD
         locations.end_panel_location.y = ImGui::GetCursorScreenPos().y;
         ImGui::SameLine();
         locations.end_panel_location.x = ImGui::GetCursorScreenPos().x;
+        //todo
+        //render_param_inputs( callee, locations.param_location);
 
         /*
         bool hovered = ImGui::IsItemHovered();
@@ -31,7 +33,7 @@ namespace OVD
         return false;
     }
 
-    void CalleePanel::render_dragdrop(const UserInterface::Config &conf, Definition::Callee const * callee, ImVec2 size, int index)
+    void CalleePanel::render_dragdrop(const UserInterface::Config &conf, Definition::Callee * callee, ImVec2 size, int index)
     {
         Callable  const* callable = callee->callable;
         if (ImGui::BeginDragDropSource())
@@ -64,7 +66,16 @@ namespace OVD
         }
     }
 
-    void CalleePanel::render_panel_core(const UserInterface::Config &conf, Definition::Callee const *callee, ImVec2 size, int index, PanelLocations *locations, UserInterface *ui)
+    void OVD::CalleePanel::render_param_inputs(const ImVec2 &register_lane_location, const ImVec2 &param_location )
+    {
+        ImVec2 start = register_lane_location, end = param_location;
+        //start.y += conf().half_line_height; end.y += conf().half_line_height;
+        //ImVec2 mid1 = { start.x - conf().half_line_height, start.y + conf().half_line_height }, mid2 = { start.x - conf().half_line_height, end.y - conf().half_line_height };
+        ///ImGui::GetForegroundDrawList()->AddBezierCurve(start, mid1, mid2, end, ImColor{ .9f,.9f,.7f,1.f }, 2);
+        ImGui::GetForegroundDrawList()->AddLine(start, end, ImColor{ .9f,.9f,.7f,1.f }, 2);
+    }
+
+    void CalleePanel::render_panel_core(const UserInterface::Config &conf, Definition::Callee *callee, ImVec2 size, int index, PanelLocations *locations, UserInterface *ui)
     {
         Callable const* callable = callee->callable;
         ImGui::Selectable(callable->name.c_str());
@@ -86,12 +97,14 @@ namespace OVD
         ImGui::BeginChild((callable->name + std::to_string(index) + "params").c_str(), { 0, 0.4f * size.y }, true);
         if (locations)locations->param_location = ImGui::GetCursorScreenPos();
         render_dragdrop(conf, callee, size, index);
+        uint8_t param_index = 0;
         for (const Variable& parameter : callable->parameters)
         {
             render_grab_handle(conf);
             ImGui::Selectable(parameter.name.c_str());
             if(ui!=nullptr)
-                drop_param(ui);
+                drop_param(ui, callee, param_index);
+            ++param_index;
         }
         ImGui::EndChild();
         ImGui::PopStyleColor();
@@ -111,7 +124,7 @@ namespace OVD
         }
     }
 
-    void CalleePanel::drop_param(UserInterface *ui)
+    void CalleePanel::drop_param(UserInterface *ui, Definition::Callee * callee, uint8_t index)
     {
         if (ImGui::BeginDragDropTarget())
         {
@@ -127,6 +140,9 @@ namespace OVD
                     if (ImGui::AcceptDragDropPayload(payload_class.c_str()))
                     {
                         ui->payload_accepted = true;
+                        //todo type check, position check, draw line
+                        callee->parameter_sources[index] = payload_callee;
+                        
                     }
                 }
             }

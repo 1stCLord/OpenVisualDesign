@@ -12,7 +12,10 @@ namespace OVD
 		{
 		public:
 			Callable const * callable;
-			std::vector<uint8_t> parameter_sources;
+			std::vector<Callee const *> parameter_sources;
+			Callee(Callable const* callable) : callable(callable), parameter_sources(callable->parameters.size(),nullptr)
+			{
+			}
 		};
 
 		Definition(const Callable& callable) : callable(callable) {}

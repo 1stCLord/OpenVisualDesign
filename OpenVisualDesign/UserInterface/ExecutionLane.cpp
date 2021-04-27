@@ -84,6 +84,15 @@ namespace OVD
         return -1;
     }
 
+    RegisterLane const * ExecutionLane::get_register_lane(Definition::Callee const* callee) const
+    {
+        for (const RegisterLane& lane : register_lanes)
+        {
+            if (lane.contains_callee(callee))return &lane;
+        }
+        return nullptr;
+    }
+
     void ExecutionLane::render_register_lanes_controls(bool render)
     {
         ImGui::BeginChild("registerlanescontrols", { 30, RegisterLane::register_lane_size * register_lanes.size() * 1.3f }, false, ImGuiWindowFlags_NoScrollbar);

@@ -15,6 +15,8 @@ namespace OVD
 		int get_column_of(Definition::Callee const* callee) const;
 		float get_current_size_y_scale() const { return current_size_y_scale; }
 
+		RegisterLane const * get_register_lane(Definition::Callee const* callee) const;
+
 		Definition * definition = nullptr;
 		std::vector<PanelLocations> panel_locations;
 	private:

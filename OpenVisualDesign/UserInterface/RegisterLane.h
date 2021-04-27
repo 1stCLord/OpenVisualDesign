@@ -14,6 +14,10 @@ namespace OVD
 		void render() override;
 		static void handle_static_drop(UserInterface &ui);
 
+		bool contains_callee(Definition::Callee const*callee) const;
+
+		ImVec2 lane_location;
+
 		static float register_lane_size;
 		static const int register_lane_max = 8;
 		static const int register_lane_min = 1;
