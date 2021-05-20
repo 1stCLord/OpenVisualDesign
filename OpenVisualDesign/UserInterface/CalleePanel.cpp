@@ -59,10 +59,10 @@ namespace OVD
             if (lane)
             {
                 ImVec2 start = lane->lane_location, end = locations.param_location;
-                //start.y += conf().half_line_height; end.y += conf().half_line_height;
-                //ImVec2 mid1 = { start.x - conf().half_line_height, start.y + conf().half_line_height }, mid2 = { start.x - conf().half_line_height, end.y - conf().half_line_height };
-                ///ImGui::GetForegroundDrawList()->AddBezierCurve(start, mid1, mid2, end, ImColor{ .9f,.9f,.7f,1.f }, 2);
-                ImGui::GetForegroundDrawList()->AddLine(start, end, ImColor{ .9f,.9f,.7f,1.f }, 2);
+                start.x = end.x;
+                start.y += conf().half_line_height; end.y += conf().half_line_height;
+                ImVec2 mid1 = { start.x - conf().half_line_height, start.y + conf().half_line_height }, mid2 = { start.x - conf().half_line_height, end.y - conf().half_line_height };
+                ImGui::GetForegroundDrawList()->AddBezierCurve(start, mid1, mid2, end, ImColor{ .9f,.9f,.7f,1.f }, 2);
             }
         }
     }

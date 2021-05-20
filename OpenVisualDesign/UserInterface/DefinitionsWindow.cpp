@@ -19,12 +19,15 @@ namespace OVD
             std::string filename = header->get_filename().filename().string();
             if (ImGui::TreeNode(filename.c_str()))
             {
-                for (Definition& definition : header->get_definitions())
+                for (Scope& scope : header->get_scopes())
                 {
-                    if (ImGui::Selectable(definition.get_callable().name.c_str(), (&definition) == selected))
+                    for (Definition& definition : scope.get_definitions())
                     {
-                        selected = &definition;
-                        (get_ui())->notify_selected_definition(selected);
+                        if (ImGui::Selectable(definition.get_callable().name.c_str(), (&definition) == selected))
+                        {
+                            selected = &definition;
+                            (get_ui())->notify_selected_definition(selected);
+                        }
                     }
                 }
                 ImGui::TreePop();
