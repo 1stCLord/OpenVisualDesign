@@ -8,4 +8,5 @@ set(CMAKE_CXX_STANDARD 20)
 project ("OpenVisualDesign")
 
 # Include sub-projects.
+add_subdirectory ("PPParse")
 add_subdirectory ("OpenVisualDesign")

@@ -5,12 +5,15 @@
 #include "Header.h"
 #include "UserInterface/UserInterface.h"
 #include <imgui.h>
+#include "../ppparse/source_file.h"
 
 using namespace std;
 
 OpenVisualDesign::OpenVisualDesign()
 {
-	headers.push_back(std::make_unique<OVD::Header>("..\\..\\..\\..\\example.h"));
+	ppparse::source_file file("..\\..\\..\\..\\example.h");
+
+	//headers.push_back(std::make_unique<OVD::Header>("..\\..\\..\\..\\example.h"));
 }
 
 int main()
