@@ -5,7 +5,10 @@ namespace ppparse
 	class scope : public graph_node
 	{
 	public:
-		scope(graph_node* const parent, const std::string_view& scope_preface, const std::string_view& scope_block) : graph_node(parent, scope_block)
-		{}
+		scope(graph_node* const parent, const std::string_view& scope_preface, const std::string_view& scope_block);
+	private:
+		const std::string_view scope_preface;
+
+		void parse_preface();
 	};
 }
