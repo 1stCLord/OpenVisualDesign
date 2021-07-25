@@ -3,7 +3,7 @@
 
 namespace ppparse
 {
-	const std::array<std::string, 96> keywords =
+	const std::array<std::string, 97> all_keywords =
 	{
 	"alignas",
 	"alignof",
