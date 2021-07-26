@@ -4,7 +4,7 @@
 namespace ppparse
 {
 
-	source_file::source_file(const std::filesystem::path &path) : graph_node(nullptr, std::string_view())
+	source_file::source_file(const std::filesystem::path &path) : graph_node(nullptr, std::string_view(), node_type::file)
 	{
 		std::ifstream file;
 		file.open(path);

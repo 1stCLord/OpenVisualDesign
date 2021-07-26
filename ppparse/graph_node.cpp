@@ -16,9 +16,10 @@ namespace ppparse
 		return (source_file*)(iterator);
 	}
 
-	graph_node::graph_node(graph_node * const parent, const std::string_view& node_body) :
+	graph_node::graph_node(graph_node * const parent, const std::string_view& node_body, node_type type) :
 		parent(parent),
-		node_body(node_body)
+		node_body(node_body),
+		type(type)
 	{
 		if(parent != nullptr)
 			parent->children.push_back(this);
@@ -41,6 +42,24 @@ namespace ppparse
 
 			parse_scope_or_expression(position, node_body);
 		} while (!is_end(position, node_body));
+	}
+
+	//todo scope preface needs to go in the parent node
+	void graph_node::parse_expression(const std::string_view &to_parse)
+	{
+		size_t position = 0;
+		do
+		{
+			//todo we need to consume ':' '::' ';' literals and operators
+			size_t initial_position = position;
+			comments_and_preprocessor_directives(position, to_parse);
+			attributes(position, to_parse);
+			template_parameters(position, to_parse);
+			keywords(position, to_parse);
+			function_parameters(position, to_parse);
+			if (position == initial_position)
+				consume_symbol(position, to_parse);
+		} while (!is_end(position, to_parse));
 	}
 
 	size_t graph_node::parse_section(size_t& position, const std::string_view& source, const std::string_view &open_token, const std::string_view &close_token)
@@ -70,16 +89,16 @@ namespace ppparse
 			} while (!is_end(position, source) && source[position - 1] == '\\');
 
 			if (source[begin] == '#')
-				get_owner()->add(std::make_unique<preprocessor_directive>(this, std::string_view(source.data() + begin, source.data() + position)));
+				get_owner()->add(std::make_unique<graph_node>(this, std::string_view(source.data() + begin, source.data() + position), node_type::preprocessor_directive));
 			else
-				get_owner()->add(std::make_unique<comment>(this, std::string_view(source.data() + begin, source.data() + position)));
+				get_owner()->add(std::make_unique<graph_node>(this, std::string_view(source.data() + begin, source.data() + position), node_type::comment));
 			++position;
 		}
 		else if (source[position] == '/' && source[position + 1] == '*')
 		{
 			size_t begin = position;
 			position = source.find("*/", position);
-			get_owner()->add(std::make_unique<comment>(this, std::string_view(source.data() + begin, source.data() + position)));
+			get_owner()->add(std::make_unique<graph_node>(this, std::string_view(source.data() + begin, source.data() + position), node_type::comment));
 			position+=2;
 		}
 	}
@@ -92,9 +111,7 @@ namespace ppparse
 		size_t result = parse_section(position, source, std::string_view("[["), std::string_view("]]"));
 		if (result != std::string::npos)
 		{
-			std::cout << "attributes - " << source.substr(position, result - position) << "\n";
-			//todo
-			//get_owner()->add(std::make_unique<attribute>(this, std::string_view(source.data() + position, source.data() + result)));
+			get_owner()->add(std::make_unique<expression>(this, std::string_view(source.data() + position + 2, source.data() + result - 2), node_type::attribute));
 			position = result;
 		}
 	}
@@ -103,11 +120,10 @@ namespace ppparse
 	{
 		skip_whitespace(position, source);
 		if (is_end(position, source))return;
-		//todo collect 
 		size_t result = parse_section(position, source, std::string_view("<"), std::string_view(">"));
 		if (result != std::string::npos)
 		{
-			std::cout << "template params - " << source.substr(position, result - position) << "\n";
+			get_owner()->add(std::make_unique<expression>(this, std::string_view(source.data() + position + 1, source.data() + result - 1), node_type::template_parameters));
 			position = result;
 		}
 	}
@@ -120,9 +136,8 @@ namespace ppparse
 		std::string_view token = std::string_view(source.data() + position, source.data() + end_position);
 		if (std::find(all_keywords.cbegin(), all_keywords.cend(), token) != all_keywords.cend())
 		{
-			get_owner()->add(std::make_unique<keyword>(this, token));
+			get_owner()->add(std::make_unique<graph_node>(this, token, node_type::keyword));
 			position = end_position;
-			std::cout << "keyword - " << token << "\n";
 		}
 	}
 
@@ -133,7 +148,7 @@ namespace ppparse
 		size_t result = parse_section(position, source, std::string_view("("), std::string_view(")"));
 		if (result != std::string::npos)
 		{
-			std::cout << "function params - " << source.substr(position, result - position) << "\n";
+			get_owner()->add(std::make_unique<expression>(this, std::string_view(source.data() + position + 1, source.data() + result - 1), node_type::function_parameters));
 			position = result;
 		}
 	}
@@ -144,9 +159,8 @@ namespace ppparse
 		if (is_end(position, source))return;
 		size_t end_position = source.find_first_of(" \n\r\t\v\f(<[", position);
 		std::string_view token = std::string_view(source.data() + position, source.data() + end_position);
-		//todo consume symbol
+		get_owner()->add(std::make_unique<graph_node>(this, token, node_type::symbol));
 		position = end_position;
-		std::cout << "symbol - " << token << "\n";
 	}
 
 	void graph_node::top_level_scope(size_t& position, const std::string_view& source)

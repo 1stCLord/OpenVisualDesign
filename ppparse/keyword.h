@@ -104,8 +104,12 @@ namespace ppparse
 	"xor_eq",
 	};
 
-	class keyword : public graph_node
+	/*class keyword : public graph_node
 	{
-
-	};
+	public:
+		keyword(graph_node* const parent, const std::string_view& node_body) : graph_node(parent, node_body)
+		{
+			node_name = "keyword";
+		}
+	};*/
 }
