@@ -4,6 +4,7 @@
 #include "scope.h"
 #include "comment.h"
 #include "keyword.h"
+#include "operator_token.h"
 #include "preprocessor_directive.h"
 #include <iostream>
 
@@ -22,7 +23,17 @@ namespace ppparse
 		type(type)
 	{
 		if(parent != nullptr)
-			parent->children.push_back(this);
+			parent->add(this);
+	}
+
+	void graph_node::add(graph_node* const child)
+	{
+		children.push_back(child);
+	}
+
+	const std::string_view& graph_node::get_node_body()
+	{
+		return node_body;
 	}
 
 	void graph_node::parse_block()
@@ -44,21 +55,23 @@ namespace ppparse
 		} while (!is_end(position, node_body));
 	}
 
-	//todo scope preface needs to go in the parent node
 	void graph_node::parse_expression(const std::string_view &to_parse)
 	{
 		size_t position = 0;
 		do
 		{
-			//todo we need to consume ':' '::' ';' literals and operators
 			size_t initial_position = position;
 			comments_and_preprocessor_directives(position, to_parse);
 			attributes(position, to_parse);
 			template_parameters(position, to_parse);
 			keywords(position, to_parse);
 			function_parameters(position, to_parse);
+			colons(position, to_parse);
 			if (position == initial_position)
+			{
+				operator_token(position, to_parse);
 				consume_symbol(position, to_parse);
+			}
 		} while (!is_end(position, to_parse));
 	}
 
@@ -132,7 +145,7 @@ namespace ppparse
 	{
 		skip_whitespace(position, source);
 		if (is_end(position, source))return;
-		size_t end_position = source.find_first_of(" \n\r\t\v\f", position);
+		size_t end_position = source.find_first_of(" \n\r\t\v\f:[+-*/=&^|!?~", position);
 		std::string_view token = std::string_view(source.data() + position, source.data() + end_position);
 		if (std::find(all_keywords.cbegin(), all_keywords.cend(), token) != all_keywords.cend())
 		{
@@ -153,13 +166,54 @@ namespace ppparse
 		}
 	}
 
+	void graph_node::colons(size_t& position, const std::string_view& source)
+	{
+		skip_whitespace(position, source);
+		if (is_end(position, source))return;
+
+		if (source[position] == ':')
+		{
+			if (source.length() > 1 && source[position + 1] == ':')
+			{
+				get_owner()->add(std::make_unique<graph_node>(this, std::string_view(source.data() + position, source.data() + position + 2), node_type::static_member));
+				position += 2;
+			}
+			else
+			{
+				get_owner()->add(std::make_unique<graph_node>(this, std::string_view(source.data() + position, source.data() + position + 1), node_type::colon));
+				++position;
+			}
+
+		}
+	}
+
+	void graph_node::operator_token(size_t& position, const std::string_view& source)
+	{
+		skip_whitespace(position, source);
+		if (is_end(position, source))return;
+		
+		for (const std::string &operator_token : operator_tokens)
+		{
+			if (source.substr(position).starts_with(operator_token))
+			{
+				get_owner()->add(std::make_unique<graph_node>(this, std::string_view(source.data() + position, source.data() + position + operator_token.size()), node_type::operator_token));
+				position += operator_token.size();
+			}
+
+		}
+	}
+
 	void graph_node::consume_symbol(size_t& position, const std::string_view& source)
 	{
 		skip_whitespace(position, source);
 		if (is_end(position, source))return;
-		size_t end_position = source.find_first_of(" \n\r\t\v\f(<[", position);
+		size_t end_position = source.find_first_of(" \n\r\t\v\f()<>:[]+-*/=&^|!?~", position);
 		std::string_view token = std::string_view(source.data() + position, source.data() + end_position);
-		get_owner()->add(std::make_unique<graph_node>(this, token, node_type::symbol));
+
+		if(token.size() && token[0] == token[token.size()-1] && token[0] == '\"')
+			get_owner()->add(std::make_unique<graph_node>(this, token, node_type::literal));
+		else
+			get_owner()->add(std::make_unique<graph_node>(this, token, node_type::symbol));
 		position = end_position;
 	}
 

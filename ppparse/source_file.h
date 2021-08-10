@@ -11,8 +11,11 @@ namespace ppparse
 	public:
 		source_file(const std::filesystem::path &path);
 		void add(std::unique_ptr<graph_node> &&node);
+		void print() const;
 	private:
 		std::string entire_file;
 		std::vector<std::unique_ptr<graph_node>> node_list;
+
+		static void print(graph_node const* node, std::ofstream& file, int depth);
 	};
 }

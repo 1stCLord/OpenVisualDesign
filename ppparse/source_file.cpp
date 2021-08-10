@@ -1,4 +1,6 @@
 #include "source_file.h"
+#include "scope.h"
+#include "graph_node.h"
 #include <fstream>
 
 namespace ppparse
@@ -18,12 +20,46 @@ namespace ppparse
 		};
 		node_body = std::string_view(entire_file.data(), entire_file.size());
 		parse_block();
-		printf("bloop");
-
+		print();
 	}
 	
 	void source_file::add(std::unique_ptr<graph_node> &&node)
 	{
 		node_list.push_back(std::move(node));
+	}
+
+	void source_file::print(graph_node const *node, std::ofstream &file, int depth)
+	{
+		char tab = '\t', nl = '\n';
+		file.write("\nline ---", sizeof("\nline ---"));
+		for(int i = 0; i < depth; ++i)
+			file.write(&tab, 1);
+
+		if(node->children.empty())
+			file.write(node->node_body.data(), node->node_body.length());
+		else
+		{
+			if (node->type == node_type::scope)
+			{
+				for (graph_node const* child : ((scope*)node)->preface_children)
+					print(child, file, depth);
+			}
+
+			for (graph_node const* child : node->children)
+			{
+				print(child, file, node->type == node_type::expression ?  depth : depth + 1);
+			}
+		}
+	}
+
+	void source_file::print() const
+	{
+		std::ofstream file;
+		file.open("tmp.txt");
+		if (file.is_open())
+		{
+			print(this, file, 0);
+			//file.write()
+		}
 	}
 }

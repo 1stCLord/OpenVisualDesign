@@ -1,6 +1,7 @@
-class operator_token : public graph_node
+#pragma once
+namespace ppparse
 {
-	const std::array<std::string, 34> operator_tokens =
+	const std::array<std::string, 37> operator_tokens =
 	{
 		//arithmetic
 		"+",
@@ -43,15 +44,17 @@ class operator_token : public graph_node
 		"^",
 		"~",
 		"<<",
-		">>"
+		">>",
+		".",
+		"->"
 	};
 
-	class operator_token : public graph_node
+	/*class operator_token : public graph_node
 	{
 	public:
 		keyword(graph_node* const parent, const std::string_view& node_body) : graph_node(parent, node_body)
 		{
 			node_name = "operator";
 		}
-	};
-};
+	};*/
+}

@@ -6,9 +6,16 @@ namespace ppparse
 		graph_node(parent, scope_block.substr(1,scope_block.size()-2), node_type::scope),
 		scope_preface(scope_preface)
 	{
-		//parse_preface();
 		parse_expression(scope_preface);
 		parse_block();
+	}
+
+	void scope::add(graph_node* const child)
+	{
+		if (child->get_node_body().data() < get_node_body().data())
+			preface_children.push_back(child);
+		else
+			children.push_back(child);
 	}
 
 	/*void scope::parse_preface()
