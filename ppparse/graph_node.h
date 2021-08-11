@@ -56,6 +56,7 @@ namespace ppparse
 		void template_parameters(size_t& position, const std::string_view& source);
 		void keywords(size_t& position, const std::string_view& source);
 		void function_parameters(size_t& position, const std::string_view& source);
+		void literals(size_t& position, const std::string_view& source);
 		void colons(size_t& position, const std::string_view& source);
 		void operator_token(size_t& position, const std::string_view& source);
 		void consume_symbol(size_t& position, const std::string_view& source);

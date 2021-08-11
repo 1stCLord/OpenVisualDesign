@@ -67,6 +67,7 @@ namespace ppparse
 			keywords(position, to_parse);
 			function_parameters(position, to_parse);
 			colons(position, to_parse);
+			literals(position, to_parse);
 			if (position == initial_position)
 			{
 				operator_token(position, to_parse);
@@ -111,6 +112,7 @@ namespace ppparse
 		{
 			size_t begin = position;
 			position = source.find("*/", position);
+			if (is_end(position, source))return;
 			get_owner()->add(std::make_unique<graph_node>(this, std::string_view(source.data() + begin, source.data() + position), node_type::comment));
 			position+=2;
 		}
@@ -146,6 +148,7 @@ namespace ppparse
 		skip_whitespace(position, source);
 		if (is_end(position, source))return;
 		size_t end_position = source.find_first_of(" \n\r\t\v\f:[+-*/=&^|!?~", position);
+		if (is_end(end_position, source))return;
 		std::string_view token = std::string_view(source.data() + position, source.data() + end_position);
 		if (std::find(all_keywords.cbegin(), all_keywords.cend(), token) != all_keywords.cend())
 		{
@@ -165,6 +168,19 @@ namespace ppparse
 			position = result;
 		}
 	}
+
+	void graph_node::literals(size_t& position, const std::string_view& source)
+	{
+		skip_whitespace(position, source);
+		if (is_end(position, source))return;
+		size_t result = parse_section(position, source, std::string_view("\""), std::string_view(""));
+		if (result != std::string::npos)
+		{
+			get_owner()->add(std::make_unique<graph_node>(this, std::string_view(source.data() + position + 1, source.data() + result - 1), node_type::literal));
+			position = result;
+		}
+	}
+
 
 	void graph_node::colons(size_t& position, const std::string_view& source)
 	{
@@ -208,6 +224,7 @@ namespace ppparse
 		skip_whitespace(position, source);
 		if (is_end(position, source))return;
 		size_t end_position = source.find_first_of(" \n\r\t\v\f()<>:[]+-*/=&^|!?~", position);
+		if (end_position == std::string::npos)end_position = source.length();
 		std::string_view token = std::string_view(source.data() + position, source.data() + end_position);
 
 		if(token.size() && token[0] == token[token.size()-1] && token[0] == '\"')
@@ -223,6 +240,7 @@ namespace ppparse
 		do
 		{
 			position = source.find_first_of("{}", position + 1);
+			if (is_end(position, source))return;
 			switch (source[position])
 			{
 			case '{':
@@ -253,7 +271,7 @@ namespace ppparse
 				break;
 			case ';':
 				//last position to position is an expression
-				get_owner()->add(std::make_unique<expression>(this, std::string_view(source.data() + last_position, source.data() + ++position)));
+				get_owner()->add(std::make_unique<expression>(this, std::string_view(source.data() + last_position, source.data() + position++)));
 				break;
 			}
 		}
