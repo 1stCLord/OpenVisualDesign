@@ -62,4 +62,15 @@ namespace ppparse
 			//file.write()
 		}
 	}
+
+	std::vector<graph_node const *> source_file::get_elements_of_type(node_type type)
+	{
+		std::vector<graph_node const*> results;
+		for (std::unique_ptr<graph_node> &node : node_list)
+		{
+			if (node->type == type)
+				results.push_back(node.get());
+		}
+		return results;
+	}
 }

@@ -173,7 +173,7 @@ namespace ppparse
 	{
 		skip_whitespace(position, source);
 		if (is_end(position, source))return;
-		size_t result = parse_section(position, source, std::string_view("\""), std::string_view(""));
+		size_t result = parse_section(position, source, std::string_view("\""), std::string_view("\""));
 		if (result != std::string::npos)
 		{
 			get_owner()->add(std::make_unique<graph_node>(this, std::string_view(source.data() + position + 1, source.data() + result - 1), node_type::literal));
@@ -223,7 +223,7 @@ namespace ppparse
 	{
 		skip_whitespace(position, source);
 		if (is_end(position, source))return;
-		size_t end_position = source.find_first_of(" \n\r\t\v\f()<>:[]+-*/=&^|!?~", position);
+		size_t end_position = source.find_first_of(" \n\r\t\v\f()<>:[]+-*/=&^|!?~,", position);
 		if (end_position == std::string::npos)end_position = source.length();
 		std::string_view token = std::string_view(source.data() + position, source.data() + end_position);
 
