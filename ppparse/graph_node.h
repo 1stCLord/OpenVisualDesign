@@ -35,15 +35,26 @@ namespace ppparse
 		graph_node(graph_node * const parent, const std::string_view& node_body, node_type type);
 
 		virtual void add(graph_node* const child);
-		const std::string_view &get_node_body();
+		const std::string_view &get_node_body() const;
+
+		virtual const std::string_view get_name() const;
+
+		std::string get_qualified_scope() const;
+
+		const node_type type;
+		graph_node* const parent;
+
+		template<class Predicate>
+		graph_node* ascend_until(const Predicate &predicate)
+		{
+			if (predicate(this))return this;
+			else return parent->ascend_until(predicate);
+		}
 	private:
-		source_file* get_owner();
+		source_file* get_owner();		
 
 		std::string_view node_body;
-		graph_node * const parent;
-		
 	protected:
-		node_type type;
 		std::vector<graph_node*> children;
 
 	protected:
@@ -65,4 +76,20 @@ namespace ppparse
 		void skip_whitespace(size_t& position, const std::string_view& source);
 		bool is_end(size_t position, const std::string_view& source);
 	};
+
+	//used to turn a bunch of symbols and static member qualifiers into a fully qualified name string view
+	template<class iterator>
+	std::string_view parse_name(iterator it, iterator end)
+	{
+		std::string_view name;
+		while (it != end && ((*it)->type == node_type::symbol || (*it)->type == node_type::static_member))
+		{
+			if (name.empty())
+				name = (*it)->get_node_body();
+			else
+				name = std::string_view(&name.front(), &(*it)->get_node_body().back());
+			++it;
+		}
+		return name;
+	}
 }

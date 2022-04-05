@@ -1,4 +1,5 @@
 #include "scope.h"
+#include <algorithm>
 
 namespace ppparse
 {
@@ -8,6 +9,40 @@ namespace ppparse
 	{
 		parse_expression(scope_preface);
 		parse_block();
+		parse_scope_preface();
+	}
+
+	const std::string_view scope::get_name() const
+	{
+		return scope_name;
+	}
+
+	scope::scope_type scope::get_scope_type() const
+	{
+		return m_scope_type;
+	}
+
+	void scope::parse_scope_preface()
+	{
+		using it_t = std::vector<graph_node*>::const_iterator;
+
+		for(it_t it = preface_children.cbegin(); it != preface_children.cend(); it++)
+		{
+			graph_node const* node = *it;
+			if (node->type == node_type::keyword && node->get_node_body() == "class")
+			{
+				m_scope_type = scope_type::class_scope;
+				scope_name = parse_name(it+1, preface_children.cend());
+				return;
+			}
+			if (node->type == node_type::function_parameters)
+			{
+				m_scope_type = scope_type::function_scope;
+				std::reverse_iterator rit(it);
+				scope_name = parse_name(rit, preface_children.crend());
+				return;
+			}
+		}
 	}
 
 	void scope::add(graph_node* const child)
@@ -17,21 +52,4 @@ namespace ppparse
 		else
 			children.push_back(child);
 	}
-
-	/*void scope::parse_preface()
-	{
-		size_t position = 0;
-		do
-		{
-			size_t initial_position = position;
-			comments_and_preprocessor_directives(position, scope_preface);
-			attributes(position, scope_preface);
-			template_parameters(position, scope_preface);
-			keywords(position, scope_preface);
-			function_parameters(position, scope_preface);
-			if (position == initial_position)
-				consume_symbol(position, scope_preface);
-		} while (!is_end(position, scope_preface));
-
-	}*/
 }

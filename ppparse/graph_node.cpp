@@ -31,9 +31,32 @@ namespace ppparse
 		children.push_back(child);
 	}
 
-	const std::string_view& graph_node::get_node_body()
+	const std::string_view& graph_node::get_node_body() const
 	{
 		return node_body;
+	}
+
+	const std::string_view graph_node::get_name() const
+	{
+		return "unnamed node";
+	}
+
+	std::string graph_node::get_qualified_scope() const
+	{
+		if (parent == nullptr)return "";
+		std::string recursive_scope = parent->get_qualified_scope();
+		if (parent->type == node_type::scope)
+		{
+			if(recursive_scope.empty())
+				return std::string(parent->get_name());
+			else
+				return recursive_scope + "::" + std::string(static_cast<scope*>(parent)->get_name());
+		}
+		else if (parent->type == node_type::expression)
+		{
+			return std::string(parent->get_name());
+		}
+		else return recursive_scope;
 	}
 
 	void graph_node::parse_block()

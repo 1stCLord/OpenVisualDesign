@@ -12,13 +12,19 @@ using namespace std;
 
 OpenVisualDesign::OpenVisualDesign()
 {
-	ppparse::source_file file("..\\..\\..\\..\\example.h");
+	//headers.push_back(std::make_unique<ppparse::source_file>("..\\..\\..\\..\\example.h"));
+	/*ppparse::source_file file("..\\..\\..\\..\\example.h");
 	file.print();
 
 	//todo find all the attributes with the ovd expression, figure out if it's a class/namespace, function or variable
 	//classes have the class or namespace keyword, functions have parameters and everything else is a varialbe
-	file.get_elements_of_type(ppparse::node_type::attribute);
-	//headers.push_back(std::make_unique<OVD::Header>("..\\..\\..\\..\\example.h"));
+	std::vector<ppparse::graph_node const*> attributes = file.get_elements_of_type(ppparse::node_type::attribute);
+	for (ppparse::graph_node const* attribute : attributes)
+	{
+		std::string scope = attribute->get_qualified_scope();
+		printf("%s", scope.c_str());
+	}*/
+	headers.push_back(std::make_unique<OVD::Header>("..\\..\\..\\..\\example.h"));
 }
 
 int main()

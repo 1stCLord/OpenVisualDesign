@@ -8,8 +8,10 @@
 
 namespace OVD
 {
-	Header::Header(const std::string& filename) : filename(filename)
+	Header::Header(const std::string& filename) : filename(filename), ppparse_file(filename)
 	{
+		parse(ppparse_file, ppparse_scopes);
+
 		std::ifstream file;
 		file.open(filename);
 		if (file.is_open())
@@ -20,7 +22,8 @@ namespace OVD
 			file.seekg(0, std::ios::beg);
 			file.read((char*)header_string.data(), length);
 
-			parse(header_string, scopes);
+			//deprecated
+			//parse(header_string, scopes);
 		}
 	}
 
@@ -51,6 +54,18 @@ namespace OVD
 				break;
 			}
 			++current_position;
+		}
+	}
+
+	void Header::parse(const ppparse::source_file& source_file, std::vector<ppparse::graph_node const*>& scopes)
+	{
+		source_file.print();
+		//todo
+		std::vector<ppparse::graph_node const*> attributes = source_file.get_elements_of_type(ppparse::node_type::attribute);
+		for (ppparse::graph_node const* attribute : attributes)
+		{
+			std::string scope = attribute->get_qualified_scope();
+			printf("%s", scope.c_str());
 		}
 	}
 }
