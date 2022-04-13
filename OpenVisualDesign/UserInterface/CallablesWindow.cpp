@@ -18,7 +18,8 @@ namespace OVD
             for (std::unique_ptr<Header>& header : get_ui()->ovd.headers)
             {
                 std::string filename = header->get_filename().filename().string();
-                for (const Scope& scope : header->get_scopes())
+                //TODO
+                /*for (const Scope& scope : header->get_scopes())
                 {
                     for (const Callable& callable : scope.get_callables())
                     {
@@ -29,7 +30,7 @@ namespace OVD
                             ImGui::CloseCurrentPopup();
                         }
                     }
-                }
+                }*/
             }
             ImGui::EndChild();
 

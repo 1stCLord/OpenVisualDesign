@@ -87,7 +87,7 @@ namespace ppparse
 			if (name.empty())
 				name = (*it)->get_node_body();
 			else
-				name = std::string_view(&name.front(), &(*it)->get_node_body().back());
+				name = std::string_view(&name.front(), &((*it)->get_node_body().back())+1);
 			++it;
 		}
 		return name;

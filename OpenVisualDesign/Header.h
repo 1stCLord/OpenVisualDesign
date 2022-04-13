@@ -3,7 +3,9 @@
 #include <string>
 #include <string_view>
 #include <filesystem>
-#include "Scope.h"
+#include "Variable.h"
+#include "Callable.h"
+#include "Definition.h"
 #include "source_file.h"
 
 namespace OVD
@@ -13,19 +15,19 @@ namespace OVD
 	public:
 		Header(const std::string& filename);
 
-		const std::vector<Scope>& get_scopes() const { return scopes; }
-		std::vector<Scope>& get_scopes() { return scopes; }
+		const std::vector<Variable>& get_variables() const { return variables; }
+		const std::vector<Callable>& get_callables() const { return callables; }
+		const std::vector<Definition>& get_definitions() const { return definitions; }
+		std::vector<Definition>& get_definitions() { return definitions; }
 
 		const std::filesystem::path& get_filename() const { return filename; }
 
 	private:
 		std::filesystem::path filename;
+		std::vector<Callable> callables;
+		std::vector<Definition> definitions;
+		std::vector<Variable> variables;
 
-		//old half baked headers
-		std::vector<Scope> scopes;
-		static void parse(const std::string& header_string, std::vector<Scope>& scopes);
-
-		//new headers using ppparse
 		ppparse::source_file ppparse_file;
 		std::vector<ppparse::graph_node const *> ppparse_scopes;
 		static void parse(const ppparse::source_file& source_file, std::vector<ppparse::graph_node const *>& scopes);

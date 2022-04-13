@@ -187,7 +187,9 @@ namespace ppparse
 		size_t result = parse_section(position, source, std::string_view("("), std::string_view(")"));
 		if (result != std::string::npos)
 		{
-			get_owner()->add(std::make_unique<expression>(this, std::string_view(source.data() + position + 1, source.data() + result - 1), node_type::function_parameters));
+			std::string_view expression_body = std::string_view(source.data() + position + 1, source.data() + result - 1);
+			if(expression_body.length())
+				get_owner()->add(std::make_unique<expression>(this, expression_body, node_type::function_parameters));
 			position = result;
 		}
 	}
