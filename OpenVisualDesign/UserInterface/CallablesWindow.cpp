@@ -18,19 +18,15 @@ namespace OVD
             for (std::unique_ptr<Header>& header : get_ui()->ovd.headers)
             {
                 std::string filename = header->get_filename().filename().string();
-                //TODO
-                /*for (const Scope& scope : header->get_scopes())
+                for (const Callable& callable : header->get_callables())
                 {
-                    for (const Callable& callable : scope.get_callables())
+                    if (ImGui::Selectable(callable.name.c_str(), (&callable) == selected))
                     {
-                        if (ImGui::Selectable(callable.name.c_str(), (&callable) == selected))
-                        {
-                            selected = &callable;
-                            notify_selected_callable(selected);
-                            ImGui::CloseCurrentPopup();
-                        }
+                        selected = &callable;
+                        notify_selected_callable(selected);
+                        ImGui::CloseCurrentPopup();
                     }
-                }*/
+                }
             }
             ImGui::EndChild();
 

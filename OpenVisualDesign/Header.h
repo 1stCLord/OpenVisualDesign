@@ -30,6 +30,6 @@ namespace OVD
 
 		ppparse::source_file ppparse_file;
 		std::vector<ppparse::graph_node const *> ppparse_scopes;
-		static void parse(const ppparse::source_file& source_file, std::vector<ppparse::graph_node const *>& scopes);
+		void parse(const ppparse::source_file& source_file, std::vector<ppparse::graph_node const *>& scopes);
 	};
 }

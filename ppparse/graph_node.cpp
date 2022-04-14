@@ -7,6 +7,7 @@
 #include "operator_token.h"
 #include "preprocessor_directive.h"
 #include <iostream>
+#include <cassert>
 
 namespace ppparse
 {
@@ -39,6 +40,34 @@ namespace ppparse
 	const std::string_view graph_node::get_name() const
 	{
 		return "unnamed node";
+	}
+
+	const std::vector<graph_node*>& graph_node::get_children() const
+	{
+		return children;
+	}
+
+	using const_gn_iter = std::vector<graph_node*>::const_iterator;
+	std::vector<std::span<graph_node *const>> graph_node::children_as_parameter_list_members() const
+	{
+		assert(type == node_type::function_parameters || type == node_type::template_parameters || type == node_type::attribute);
+		std::vector<std::span<graph_node * const>> result;
+		const_gn_iter next_list_member_begin = children.cbegin(), next_list_member_end = children.cbegin();
+		while (next_list_member_end != children.cend())
+		{
+			next_list_member_end = std::find_if(next_list_member_begin, children.cend(), [](graph_node* child)
+				{
+					return child->type == node_type::operator_token && child->get_node_body() == ",";
+				});
+			size_t size = next_list_member_end - next_list_member_begin;
+			std::span<graph_node * const> next_list_member = std::span<graph_node *const>(next_list_member_begin, size);
+			result.push_back(next_list_member);
+			if (next_list_member_end == children.cend())
+				next_list_member_begin = next_list_member_end;
+			else
+				next_list_member_begin = next_list_member_end + 1;
+		}
+		return result;
 	}
 
 	std::string graph_node::get_qualified_scope() const

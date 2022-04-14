@@ -1,6 +1,7 @@
 #pragma once
 #include <string_view>
 #include <vector>
+#include <span>
 
 namespace ppparse
 {
@@ -39,6 +40,8 @@ namespace ppparse
 
 		virtual const std::string_view get_name() const;
 
+		const std::vector<graph_node*> &get_children() const;
+
 		std::string get_qualified_scope() const;
 
 		const node_type type;
@@ -50,6 +53,8 @@ namespace ppparse
 			if (predicate(this))return this;
 			else return parent->ascend_until(predicate);
 		}
+
+		std::vector<std::span<graph_node * const>> children_as_parameter_list_members() const;
 	private:
 		source_file* get_owner();		
 
