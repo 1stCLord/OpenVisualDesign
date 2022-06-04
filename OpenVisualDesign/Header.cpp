@@ -21,6 +21,7 @@ namespace OVD
 		{
 			ppparse::graph_node* parent_expression = attribute->parent;
 			std::string parent_expression_name = std::string(parent_expression->get_name());
+
 			std::string parent_expression_scope = parent_expression->get_qualified_scope();
 
 			std::vector<std::span<ppparse::graph_node * const>> attribute_members = attribute->children_as_parameter_list_members();
@@ -32,9 +33,9 @@ namespace OVD
 					std::string_view attribute_type = attribute_member[2]->get_node_body();
 					//printf("%s", attribute_type.c_str());
 					if (attribute_type == "callable")
-						callables.push_back(Callable{ .name = parent_expression_name });
+						callables.push_back(Callable(parent_expression));
 					else if (attribute_type == "defined")
-						definitions.push_back(Definition(Callable{ .name = parent_expression_name }));
+						definitions.push_back(Definition(Callable(parent_expression)));
 					else if (attribute_type == "variable")
 						variables.push_back(Variable());
 
