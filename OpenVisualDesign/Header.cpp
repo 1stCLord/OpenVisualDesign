@@ -36,8 +36,9 @@ namespace OVD
 						callables.push_back(Callable(parent_expression));
 					else if (attribute_type == "defined")
 						definitions.push_back(Definition(Callable(parent_expression)));
-					else if (attribute_type == "variable")
-						variables.push_back(Variable());
+					//TODO
+					//else if (attribute_type == "variable")
+						//variables.push_back(Variable());
 
 				}
 			}

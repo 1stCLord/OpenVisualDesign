@@ -51,7 +51,8 @@ namespace ppparse
 		graph_node* ascend_until(const Predicate &predicate)
 		{
 			if (predicate(this))return this;
-			else return parent->ascend_until(predicate);
+			else if (parent != nullptr) return parent->ascend_until(predicate);
+			else return nullptr;
 		}
 
 		std::vector<std::span<graph_node * const>> children_as_parameter_list_members() const;

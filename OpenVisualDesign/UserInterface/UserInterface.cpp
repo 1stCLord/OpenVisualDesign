@@ -9,6 +9,8 @@
 #include <SDL_opengl.h>
 #include <stdio.h>
 
+#include <algorithm>
+
 namespace OVD
 {
     UserInterface::UserInterface()
@@ -28,8 +30,37 @@ namespace OVD
         ImGui_ImplOpenGL2_Init();
 
         //windows.push_back(std::make_unique<CallablesWindow>(this));
-        windows.push_back(std::make_unique<ExecutionLane>(this));
+        //windows.push_back(std::make_unique<ExecutionLane>(this));
         windows.push_back(std::make_unique<DefinitionsWindow>(this));
+
+        notify_selected_definition = [&](Definition* selected)
+        {
+            new_selected_definition = selected;
+        };
+    }
+
+    void UserInterface::add_execution_lane(Definition* selected)
+    {
+        std::unique_ptr<ExecutionLane> execution_lane = std::make_unique<ExecutionLane>(this);
+        execution_lane->definition = selected;
+        execution_lanes.push_back(execution_lane.get());
+        windows.push_back(std::move(execution_lane));
+    }
+
+    void UserInterface::remove_execution_lane(ExecutionLane* selected)
+    {
+        auto execution_lanes_result = std::ranges::remove(execution_lanes, selected);
+        execution_lanes.erase(execution_lanes_result.begin(), execution_lanes_result.end());
+        auto windows_result = std::ranges::remove(windows, static_cast<Window*>(selected), [](std::unique_ptr<Window>& ptr)
+            {
+                return ptr.get();
+            });
+        windows.erase(windows_result.begin(), windows_result.end());
+    }
+
+    const std::vector<ExecutionLane*>& UserInterface::get_execution_lanes() const
+    {
+        return execution_lanes;
     }
 
     UserInterface::~UserInterface()
@@ -48,6 +79,28 @@ namespace OVD
         ImGuiIO& io = ImGui::GetIO();
         config.window_size = io.DisplaySize;
         payload_accepted = false;
+
+        update_selected_definitions();
+    }
+
+    void UserInterface::update_selected_definitions()
+    {
+        if (new_selected_definition)
+        {
+            std::vector<ExecutionLane*>::const_iterator find_result = std::ranges::find(execution_lanes, new_selected_definition, [](ExecutionLane const* execution_lane)
+                {
+                    return execution_lane->definition;
+                });
+            if (find_result == execution_lanes.cend())
+            {
+                add_execution_lane(new_selected_definition);
+            }
+            else
+            {
+                remove_execution_lane(*find_result);
+            }
+            new_selected_definition = nullptr;
+        }
     }
 
     void UserInterface::run()

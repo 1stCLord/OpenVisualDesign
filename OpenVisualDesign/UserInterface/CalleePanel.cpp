@@ -93,7 +93,7 @@ namespace OVD
         for (const Variable& parameter : callable->parameters)
         {
             render_grab_handle();
-            ImGui::Selectable(parameter.name.c_str());
+            ImGui::Selectable(parameter.get_name().c_str());
             if(!is_dragdrop)
                drop_param(param_index);
             ++param_index;

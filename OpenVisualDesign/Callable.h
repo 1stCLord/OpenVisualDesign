@@ -19,5 +19,7 @@ namespace OVD
 		bool is_static;//todo
 
 		Callable(ppparse::graph_node const* callable_node);
+	private:
+		ppparse::graph_node const* node;
 	};
 }

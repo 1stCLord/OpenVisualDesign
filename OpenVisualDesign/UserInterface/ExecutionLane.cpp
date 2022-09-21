@@ -4,11 +4,6 @@ namespace OVD
 {
     ExecutionLane::ExecutionLane(UserInterface* user_interface) :Window(user_interface), callables_window(user_interface), register_lanes{RegisterLane(user_interface,0, this)}
     {
-        get_ui()->notify_selected_definition = [&](Definition * selected)
-        {
-            definition = selected;
-        };
-
         callables_window.notify_selected_callable = [&](Callable const* selected)
         {
             std::vector<std::unique_ptr<Definition::Callee>> &callees = definition->get_callees();
@@ -20,8 +15,17 @@ namespace OVD
 	{
         if (definition == nullptr)return;
 
-        ImVec2 position = { (float)conf().calc_borders(1) + conf().left_win_size, conf().border };
-        ImVec2 size = { conf().calc_fill(position).x, (float)conf().execution_lane_size + ((RegisterLane::register_lane_size+(conf().window_padding.y*2))*register_lanes.size()) + 10 };
+        const std::vector<ExecutionLane*>& execution_lanes = get_ui()->get_execution_lanes();
+        std::vector<ExecutionLane*>::const_iterator cit = std::ranges::find(execution_lanes, this);
+        int index = cit - execution_lanes.cbegin();
+
+        float size_y = (float)conf().execution_lane_size + ((RegisterLane::register_lane_size + (conf().window_padding.y * 2)) * register_lanes.size()) + 10;
+        float position_y = conf().border + ((size_y + conf().border) * index);
+
+        ImVec2 position = { (float)conf().calc_borders(1) + conf().left_win_size, position_y};
+
+        ImVec2 size = { conf().calc_fill(position).x, size_y };
+
         ImVec2 panel_size = { current_size_y_scale * conf().execution_lane_size, conf().execution_lane_size * 0.8f };
         float content_size_x = (panel_size.x + conf().window_padding.x * 2) * definition->get_callees().size();
         if (content_size_x < size.x)content_size_x = 0;

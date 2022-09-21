@@ -9,10 +9,11 @@ namespace ppparse
 
 		scope *parent_scope = static_cast<scope*>(ascend_until([](graph_node const* node)
 			{
+				if (node == nullptr)return false;
 				return node->type == node_type::scope;
 			}));
 		//TODO if it's in class scope it's a declaration, the last set of symbols before the semi colon, assignment operator, or function parameter list is the name
-		if (type == node_type::expression && parent_scope->get_scope_type() != scope::scope_type::function_scope)
+		if (type == node_type::expression && (parent_scope == nullptr || parent_scope->get_scope_type() != scope::scope_type::function_scope))
 		{
 			//search backwards from the semi colon, find either an assignment operator or a function parameter list
 			std::vector<graph_node*>::const_iterator name_end = children.cend(), name_begin = children.cbegin();
@@ -26,12 +27,24 @@ namespace ppparse
 				}
 			}
 
+			node_type next_node_type = node_type::symbol;
 			for (std::vector<graph_node*>::const_reverse_iterator it = std::vector<graph_node*>::const_reverse_iterator(name_end); it != children.crend(); it++)
 			{
 				graph_node* node = *it;
-				if (node->type != node_type::symbol && node->type != node_type::static_member)
+				//if (node->type != node_type::symbol && node->type != node_type::static_member)
+				if(node->type!=next_node_type)
 				{
 					name_begin = it.base();
+					break;
+				}
+
+				switch (next_node_type)
+				{
+				case node_type::symbol:
+					next_node_type = node_type::semi_colon;
+					break;
+				case node_type::semi_colon:
+					next_node_type = node_type::symbol;
 					break;
 				}
 			}

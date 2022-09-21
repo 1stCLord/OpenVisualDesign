@@ -11,6 +11,7 @@ typedef void* SDL_GLContext;
 namespace OVD
 {
 	class Window;
+	class ExecutionLane;
 
 	class UserInterface
 	{
@@ -19,6 +20,8 @@ namespace OVD
 		~UserInterface();
 
 		void run();
+
+		const std:: vector<ExecutionLane*>& get_execution_lanes() const;
 
 		struct Config
 		{
@@ -52,9 +55,17 @@ namespace OVD
 		bool poll();
 		void render();
 
+		void add_execution_lane(Definition* selected);
+		void remove_execution_lane(ExecutionLane* execution_lane);
+
+		void update_selected_definitions();
+
 		SDL_Window* window;
 		SDL_GLContext gl_context;
 
 		std::vector<std::unique_ptr<Window>> windows;
+		std::vector<ExecutionLane*> execution_lanes;
+
+		Definition* new_selected_definition = nullptr;
 	};
 }

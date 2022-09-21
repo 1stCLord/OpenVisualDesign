@@ -2,6 +2,9 @@
 #include <files>
 //this is an example c++ header file for parsing
 
+[[ovd::callable]]
+std::string free_func();
+
 class foo
 {
 	/*
