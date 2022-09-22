@@ -20,23 +20,26 @@ namespace OVD
         int index = cit - execution_lanes.cbegin();
 
         float size_y = (float)conf().execution_lane_size + ((RegisterLane::register_lane_size + (conf().window_padding.y * 2)) * register_lanes.size()) + 10;
-        float position_y = conf().border + ((size_y + conf().border) * index);
 
-        ImVec2 position = { (float)conf().calc_borders(1) + conf().left_win_size, position_y};
-
+        ImVec2 position = ImGui::GetWindowPos();
         ImVec2 size = { conf().calc_fill(position).x, size_y };
 
         ImVec2 panel_size = { current_size_y_scale * conf().execution_lane_size, conf().execution_lane_size * 0.8f };
         float content_size_x = (panel_size.x + conf().window_padding.x * 2) * definition->get_callees().size();
         if (content_size_x < size.x)content_size_x = 0;
 
-        ImGui::SetNextWindowPos(position);
         ImGui::SetNextWindowContentSize({content_size_x, 0});
         std::string name;
         if (definition != nullptr)
             name = definition->get_callable().name;
 
         ImGui::BeginChild(name.c_str(), size, true, ImGuiWindowFlags_HorizontalScrollbar);
+        ImVec2 actual_position = ImGui::GetWindowPos();
+        ImVec2 actual_size = ImGui::GetWindowSize();
+        bool is_cursor_in_window = cursor_in_window(actual_position, actual_size);
+
+        ImGui::Text(name.c_str());
+
         bool should_render_register_lanes = ImGui::CollapsingHeader("Register Lanes");
 
         render_register_lanes_controls(should_render_register_lanes);
@@ -47,8 +50,6 @@ namespace OVD
 
         std::vector<std::unique_ptr<Definition::Callee>> &callees = definition->get_callees();
 
-        bool cursor_in_window = Window::cursor_in_window(position, size);
-
         bool has_popup = callables_window.is_open();
         if(!has_popup)insert_index = 0;
         for (std::unique_ptr<Definition::Callee> &callee : callees)
@@ -56,23 +57,27 @@ namespace OVD
             if (panels.size() < (i + 1))panels.push_back(CalleePanel(get_ui(), this, callee.get(), panel_size, i, has_popup));
             else panels[i] = CalleePanel(get_ui(), this, callee.get(), panel_size, i, has_popup);
 
-            //CalleePanel panel(get_ui(), callee.get(), panel_size, i, has_popup);
             panels[i].render();
-            if (ImGui::GetMousePos().x > panels[i].locations.panel_location.x && cursor_in_window && !has_popup)
+            if (ImGui::GetMousePos().x > panels[i].locations.panel_location.x && is_cursor_in_window && !has_popup)
                 insert_index = i + 1;
             i++;
         }
 
-        if(has_popup || cursor_in_window)
+        if(has_popup || is_cursor_in_window)
             render_drop_insert();
         RegisterLane::handle_static_drop(*get_ui());
-        drop_callee(cursor_in_window ? insert_index : -1);
+        drop_callee(is_cursor_in_window ? insert_index : -1);
 
         ImGui::EndChild();
         ImGui::EndChild();
         
-        if (ImGui::GetIO().KeyShift)ImGui::SetScrollX(ImGui::GetIO().MouseWheel / 10);
-        else current_size_y_scale = std::max(0.1f, current_size_y_scale + ImGui::GetIO().MouseWheel/10);
+        if (ImGui::IsItemHovered())
+        {
+            //ImGui::SetItemUsingMouseWheel();
+            if (!ImGui::GetIO().KeyShift)
+                current_size_y_scale = std::max(0.1f, current_size_y_scale + ImGui::GetIO().MouseWheel / 10);
+
+        }
 
         callables_window.render();
 	}

@@ -7,12 +7,10 @@ namespace OVD
 {
 	void DefinitionsWindow::render()
 	{
-        ImVec2 position = { conf().border, conf().border };
-        ImVec2 size(conf().left_win_size, conf().calc_fill(position).y);
-        ImGui::SetNextWindowPos(position);
+        ImVec2 size(conf().left_win_size, 0);
         char searchtext[50];
         memset(searchtext, 0, 50);
-        ImGui::BeginChild("toolbar", size, true);
+        ImGui::BeginChild("toolbar", size, true, ImGuiWindowFlags_NoScrollbar);
         ImGui::InputText("Search", searchtext, 50);
         for (std::unique_ptr<Header> &header : get_ui()->ovd.headers)
         {

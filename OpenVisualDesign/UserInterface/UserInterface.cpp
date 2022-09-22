@@ -31,7 +31,9 @@ namespace OVD
 
         //windows.push_back(std::make_unique<CallablesWindow>(this));
         //windows.push_back(std::make_unique<ExecutionLane>(this));
-        windows.push_back(std::make_unique<DefinitionsWindow>(this));
+        std::unique_ptr<DefinitionsWindow> definitions_window_ptr = std::make_unique<DefinitionsWindow>(this);
+        definitions_window = definitions_window_ptr.get();
+        windows.push_back(std::move(definitions_window_ptr));
 
         notify_selected_definition = [&](Definition* selected)
         {
@@ -137,21 +139,43 @@ namespace OVD
             static float f = 0.0f;
             static int counter = 0;
 
-            ImGui::SetNextWindowPos({ 0, 0 });
             ImGui::SetNextWindowSize({ config.window_size.x, config.window_size.y });
-            ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove;
+            ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_MenuBar;
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, config.window_padding);
             ImGui::PushStyleColor(ImGuiCol_ChildBg, config.panel_colour.Value);
 
             bool open;
             ImGui::Begin("OVD", &open, flags);
 
-            for (std::unique_ptr<Window> &window : windows)
-                window->render();
+            render_menu_bar();
 
-            bool demo = true;
-            ImGui::ShowDemoWindow(&demo);
+            definitions_window->render();
+            ImGui::SameLine();
+            ImGui::BeginChild("Scrolling", {0,0}, true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+            for (ExecutionLane* lane : execution_lanes)
+                lane->render();
+            ImGui::EndChild();
 
+            //bool demo = true;
+            //ImGui::ShowDemoWindow(&demo);
+
+            ImGui::SetNextWindowPos({ config.window_size.x-600, config.window_size.y-250 });
+            ImGui::BeginChild("todo", {520,210}, true, ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::Text(
+"todo:\n\
+- add scrolling to main execution window\n\
+- add execution lane context to the right click menu\n\
+- add ability to name locals\n\
+- add better ui and robustness for register lane & parameter interaction\n\
+- add project folder configuration (for multiple headers etc)\n\
+- add json serialisation/deserialisation\n\
+- add codegen\n\
+- type checking\n\
+- compilation & error reporting\n\
+- add variables system\n\
+- add actual functional test case (string & vector)\n\
+- add the ability for completely generated header");
+            ImGui::EndChild();
             ImGui::PopStyleColor();
             ImGui::PopStyleVar();
 
@@ -172,5 +196,20 @@ namespace OVD
     ImVec2 UserInterface::Config::calc_fill(ImVec2 position)
     {
         return { (window_size.x - position.x) - border, (window_size.y - position.y) - border };
+    }
+
+    void UserInterface::render_menu_bar()
+    {
+        if (ImGui::BeginMenuBar())
+        {
+            if (ImGui::BeginMenu("File"))
+            {
+                if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */ }
+                if (ImGui::MenuItem("Save", "Ctrl+S")) { /* Do stuff */ }
+                if (ImGui::MenuItem("Close", "Ctrl+W")) {  }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
     }
 }

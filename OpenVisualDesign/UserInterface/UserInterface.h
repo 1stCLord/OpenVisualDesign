@@ -12,6 +12,7 @@ namespace OVD
 {
 	class Window;
 	class ExecutionLane;
+	class DefinitionsWindow;
 
 	class UserInterface
 	{
@@ -55,6 +56,8 @@ namespace OVD
 		bool poll();
 		void render();
 
+		void render_menu_bar();
+
 		void add_execution_lane(Definition* selected);
 		void remove_execution_lane(ExecutionLane* execution_lane);
 
@@ -64,6 +67,7 @@ namespace OVD
 		SDL_GLContext gl_context;
 
 		std::vector<std::unique_ptr<Window>> windows;
+		DefinitionsWindow* definitions_window;
 		std::vector<ExecutionLane*> execution_lanes;
 
 		Definition* new_selected_definition = nullptr;
